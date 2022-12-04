@@ -16,7 +16,7 @@ const rangeOverlap = elves => {
 let data = fs.readFileSync('data.txt', {encoding:'utf8', flag:'r'});
 let rows = data.split("\r\n")
 
-fullyContained = rows.map(row => {
+let pairs = rows.map(row => {
     let elves = row.split(',');
     elves = elves.map(range => {
         let nums = range.split('-');
@@ -25,20 +25,11 @@ fullyContained = rows.map(row => {
             high: nums[1] - 0
         }
     });
-    return rangeContain(elves);
-})
+    return elves
+});
 
-overlaps = rows.map(row => {
-    let elves = row.split(',');
-    elves = elves.map(range => {
-        let nums = range.split('-');
-        return {
-            low: nums[0] - 0,
-            high: nums[1] - 0
-        }
-    });
-    return rangeOverlap(elves);
-})
+fullyContained = pairs.map(elves => rangeContain(elves));
+overlaps = pairs.map(elves => rangeOverlap(elves));
 
 console.log(fullyContained.reduce((count, bool) => count + (bool ? 1 : 0), 0));
 console.log(overlaps.reduce((count, bool) => count + (bool ? 1 : 0), 0));
