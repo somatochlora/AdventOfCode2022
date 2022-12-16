@@ -9,35 +9,61 @@ let roomsArray = data.split("\r\n")
         let paths = words.slice(9)
             .map(word => word.substring(0, 2));
         let open = false;
-        return [id, {id, rate, hasValve, paths, open}];
+        let routes = [];
+        return [id, {id, rate, hasValve, paths, open, routes}];
     });
 
 let rooms = Object.fromEntries(roomsArray);
 
-let maxFlow = 0;
-const stepN = 30;
+let findShortestRoute = (a, b, avoid) => {
+    if (avoid.includes(a)) return 99999;
+    if (a.paths.includes(b.id)) return 1;
+    let min = 99999;
+    for (let path of a.paths) {
+        min = Math.min(min, findShortestRoute(rooms[path], b, avoid.concat(a)));
+    }
+    return 1 + min;
+}
 
-let tryOptions = (room, totalFlow, flowRate, step, noChangeStack) => {
-    totalFlow += flowRate;
-    if (step == stepN) {
-        maxFlow = Math.max(maxFlow, totalFlow);
-        return;
-    }
-    if (room.hasValve && !room.open) {
-        room.open = true;
-        tryOptions(room, totalFlow, flowRate + room.rate, step + 1, []); 
-        room.open = false;
-    }
-    for (path of room.paths) {
-        if (noChangeStack.includes(path)) {
-            maxFlow = Math.max(maxFlow, totalFlow + (stepN - step - 1) * flowRate);
-        } else {    
-            noChangeStack.push(room.id);        
-            tryOptions(rooms[path], totalFlow, flowRate, step + 1, noChangeStack);
-            noChangeStack.splice(noChangeStack.indexOf(room.id), 1);
-        }
+// optimise routes
+let nodes = []
+for (let i = 0; i < roomsArray.length; i++) {
+    let room = roomsArray[i][1];
+    if (room.id == "AA" || room.hasValve) nodes.push(room);
+}
+
+for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+        let dist = findShortestRoute(nodes[i], nodes[j], []);
+        if (nodes[j].id != "AA") nodes[i].routes.push({dest: nodes[j], len: dist});
+        if (nodes[i].id != "AA") nodes[j].routes.push({dest: nodes[i], len: dist});
     }
 }
 
-tryOptions(rooms["AA"], 0, 0, 1, []);
+let maxFlow = 0;
+const stepN = 30;
+
+let tryOptions = (room, totalFlow, flowRate, step) => {
+
+    totalFlow += flowRate;     
+    if (step == stepN) { 
+        maxFlow = Math.max(maxFlow, totalFlow);       
+        return;
+    }   
+
+    step += 1
+    flowRate += room.rate;    
+    totalFlow += flowRate;    
+    room.open = true;
+    maxFlow = Math.max(maxFlow, totalFlow + flowRate * (stepN - step))
+
+    for (let route of room.routes) {
+        if (route.len < (stepN - step) && !route.dest.open) {
+            tryOptions(route.dest, totalFlow + flowRate * (route.len - 1), flowRate, step + route.len);
+        }
+    }
+    room.open = false;
+}
+
+tryOptions(rooms["AA"], 0, 0, 0);
 console.log(maxFlow);
