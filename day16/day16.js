@@ -41,7 +41,7 @@ for (let i = 0; i < nodes.length; i++) {
 }
 
 let maxFlow = 0;
-const stepN = 30;
+let stepN = 30;
 
 let tryOptions = (room, totalFlow, flowRate, step) => {
 
@@ -67,3 +67,78 @@ let tryOptions = (room, totalFlow, flowRate, step) => {
 
 tryOptions(rooms["AA"], 0, 0, 0);
 console.log(maxFlow);
+
+// part 2
+
+roomsArray.forEach(room => room[0].open = false);
+rooms["AA"].open = true;
+
+maxFlow = 0;
+stepN = 26;
+
+optionsDouble = (room1, room1left, room2, room2left, totalFlow, flowRate, step) => {
+
+    totalFlow += flowRate;     
+    if (step == stepN) { 
+        maxFlow = Math.max(maxFlow, totalFlow);  
+        return;
+    }   
+
+    step++;
+    room1left--
+    room2left--
+
+    let room1opened = false;
+    if (room1 != null && !room1.open && room1left == 0) {
+        flowRate += room1.rate;
+        room1.open = true;
+        room1opened = true;
+        room1left++;
+    }
+    let room2opened = false;
+    if (room2 != null && !room2.open && room2left == 0) {
+        flowRate += room2.rate; 
+        room2.open = true;
+        room2opened = true;
+        room2left++;
+    }
+
+    let dest1list, dest2list;
+
+    if (room1left == 0) {
+        console.log("AAA");
+        dest1list = room1.routes.slice()
+        dest1list.push({dest: null, len: -1});
+        console.log(dest1list);
+    } else {
+        dest1list = [{dest: room1, len: room1left}];
+    }
+
+    if (room2left == 0) {
+        dest2list = room2.routes.slice();
+        dest2list.push({dest: null, len: -1});
+    } else {
+        dest2list = [{dest: room2, len: room2left}];
+    }    
+
+    for (let route1 of dest1list) {
+        for (let route2 of dest2list) {
+            if ((route1.dest == null || !route1.dest.open) 
+            && (route2.dest == null || !route2.dest.open)
+            && route1.len < stepN - step 
+            && route2.len < stepN - step
+            && (route1.dest != route2.dest || route1.dest == null)) {
+                if (route1.dest != null) console.log("going! | " + route1.len);
+                optionsDouble(route1.dest, route1.len, route2.dest, route2.len, totalFlow, flowRate, step);
+            }
+        }
+    }
+
+    if (room1opened) room1.open = false;
+    if (room2opened) room2.open = false;
+}
+
+optionsDouble(rooms["AA"], 1, rooms["AA"], 1, 0, 0, 1);
+
+console.log(maxFlow);
+
