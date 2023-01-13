@@ -80,7 +80,7 @@ optionsDouble = (room1, room1left, room2, room2left, totalFlow, flowRate, step) 
 
     totalFlow += flowRate;     
     if (step == stepN) { 
-        maxFlow = Math.max(maxFlow, totalFlow);  
+        maxFlow = Math.max(maxFlow, totalFlow);
         return;
     }   
 
@@ -106,16 +106,14 @@ optionsDouble = (room1, room1left, room2, room2left, totalFlow, flowRate, step) 
     let dest1list, dest2list;
 
     if (room1left == 0) {
-        console.log("AAA");
-        dest1list = room1.routes.slice()
-        dest1list.push({dest: null, len: -1});
-        console.log(dest1list);
+        dest1list = room1.routes.filter(route => !route.dest.open);
+        dest1list.push({dest: null, len: -1});  
     } else {
         dest1list = [{dest: room1, len: room1left}];
     }
 
     if (room2left == 0) {
-        dest2list = room2.routes.slice();
+        dest2list = room2.routes.filter(route => !route.dest.open);
         dest2list.push({dest: null, len: -1});
     } else {
         dest2list = [{dest: room2, len: room2left}];
@@ -123,12 +121,9 @@ optionsDouble = (room1, room1left, room2, room2left, totalFlow, flowRate, step) 
 
     for (let route1 of dest1list) {
         for (let route2 of dest2list) {
-            if ((route1.dest == null || !route1.dest.open) 
-            && (route2.dest == null || !route2.dest.open)
-            && route1.len < stepN - step 
+            if (/*route1.len < stepN - step 
             && route2.len < stepN - step
-            && (route1.dest != route2.dest || route1.dest == null)) {
-                if (route1.dest != null) console.log("going! | " + route1.len);
+            &&*/ (route1.dest != route2.dest || route1.dest == null)) {
                 optionsDouble(route1.dest, route1.len, route2.dest, route2.len, totalFlow, flowRate, step);
             }
         }
